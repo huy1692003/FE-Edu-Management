@@ -1,95 +1,85 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
 
-export default function Home() {
+import LayoutSite from "@/components/Layout";
+import { Typography, Card, Avatar } from "antd";
+import { useEffect, useState } from "react";
+import giangvienService from "@/services/giangvienService";
+import { khoahocService } from "@/services/khoahocService";
+import { URL_SERVER } from "@/constants/api";
+import { useRouter } from "next/navigation";
+
+const Home = () => {
+  const [giangViens, setGiangViens] = useState([]);
+  const [khoaHocs, setKhoaHocs] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const giangVienData = await giangvienService.getAllGiangVien();
+        const khoaHocData = await khoahocService.getAll();
+        setGiangViens(giangVienData);
+        setKhoaHocs(khoaHocData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleKhoaHocClick = (khoaHocId) => {
+    router.push(`/system/khoahoc/chitietkhoahoc?id=${khoaHocId}`);
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <LayoutSite>
+      <div style={{ marginBottom: 40 }}>
+        <Typography.Title level={2} style={{ marginBottom: 24 }}>Khóa học nổi bật</Typography.Title>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+          {khoaHocs.slice(0, 8).map((khoaHoc) => (
+            <Card
+              key={khoaHoc.khoaHocId}
+              hoverable
+              onClick={() => handleKhoaHocClick(khoaHoc.khoaHocId)}
+              cover={<img alt={khoaHoc.tenKhoaHoc} src={URL_SERVER+khoaHoc.image || "/images/courses/default.jpg"} style={{ height: 160, objectFit: 'cover' }} />}
+            >
+              <Card.Meta
+                title={khoaHoc.tenKhoaHoc}
+                description={khoaHoc.moTa}
+              />
+              <Typography.Text type="secondary" style={{ marginTop: 8, display: 'block' }}>
+                Giảng viên: {khoaHoc.giangVien?.tenGiangVien}
+              </Typography.Text>
+            </Card>
+          ))}
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+
+      <div>
+        <Typography.Title level={2} style={{ marginBottom: 24 }}>Giảng viên tiêu biểu</Typography.Title>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+          {giangViens.slice(0, 4).map((giangVien) => (
+            <Card key={giangVien.giangVienId} bordered={false}>
+              <div style={{ textAlign: 'center'   }}>
+                <Avatar 
+                  size={120} 
+                  src={URL_SERVER+giangVien.image || "https://randomuser.me/api/portraits/men/32.jpg"} 
+                  style={{ marginBottom: 16 }} 
+                />
+                <Typography.Title level={4} style={{ marginBottom: 8 }}>
+                  {giangVien.tenGiangVien}
+                </Typography.Title>
+                <Typography.Text type="secondary">{giangVien.email}</Typography.Text>
+                <Typography.Text type="secondary" style={{ display: 'block' }}>
+                  SĐT: {giangVien.soDienThoai}
+                </Typography.Text>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </LayoutSite>
   );
 }
+
+export default Home;
